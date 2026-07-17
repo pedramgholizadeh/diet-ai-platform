@@ -1,0 +1,4 @@
+.env
+.gitignore
+dietaiplatform/wrangler.json
+dietaiplatform/tsconfig.json

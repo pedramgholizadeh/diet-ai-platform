@@ -3,12 +3,18 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>ویزارد برنامه غذایی</title>
+<title>Diet Tisa Platform | WEBIRO</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,300..700,0..1,-50..200" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/persian-datepicker@1.2.0/dist/css/persian-datepicker.min.css" />
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/persian-date@1.1.0/dist/persian-date.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/persian-datepicker@1.2.0/dist/js/persian-datepicker.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
 <style>
-  /* ================= Design tokens (same as template) ================= */
+  /* ================= Design tokens ================= */
   :root{
     --bg:#fafaf7;
     --page:#ffffff;
@@ -27,57 +33,71 @@
   button{font-family:inherit;}
   input,textarea,select{font-family:inherit;color:var(--ink);}
 
-  /* ================= Wizard shell ================= */
-  .wizard{
-    max-width:900px;margin:24px auto;padding:0 16px;
+  /* Material icons */
+  .material-symbols-outlined{
+    font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 20;
+    font-size:18px;
+    line-height:1;
+    vertical-align:middle;
   }
-  .wizard-card{
-    background:#fff;border:1px solid var(--line);border-radius:16px;
-    box-shadow:0 6px 24px rgba(0,0,0,.04);overflow:hidden;
+  .btn .material-symbols-outlined{font-size:16px;margin-left:4px;}
+  .btn-sm .material-symbols-outlined{font-size:15px;}
+
+  /* ================= Loading screen ================= */
+  .loading-screen{
+    position:fixed;inset:0;z-index:9999;
+    background:var(--bg);
+    display:flex;align-items:center;justify-content:center;
+    transition:opacity .6s ease, visibility .6s ease;
   }
-  .wizard-header{
-    padding:22px 26px 14px;border-bottom:1px solid var(--line);
-    background:linear-gradient(135deg,#fff, #f7f5ef);
+  .loading-screen.hidden{opacity:0;visibility:hidden;pointer-events:none;}
+  .loading-box{
+    display:flex;flex-direction:column;align-items:center;gap:18px;
+    padding:36px 48px;border-radius:18px;
+    background:var(--page);border:1px solid var(--line);
+    box-shadow:0 12px 40px rgba(0,0,0,.05);
   }
-  .wizard-header h1{margin:0;font-size:20px;font-weight:800;}
-  .wizard-header p{margin:4px 0 0;font-size:13px;color:var(--muted);}
-  .progress-wrap{margin-top:16px;}
-  .progress-steps{
-    display:flex;gap:6px;flex-wrap:wrap;font-size:11.5px;color:var(--muted);
-    justify-content:space-between;
+  .loading-spinner{
+    width:44px;height:44px;border-radius:50%;
+    border:3px solid var(--line);
+    border-top-color:var(--accent);
+    animation:spin 1s linear infinite;
   }
-  .progress-steps .st{
-    flex:1;min-width:80px;text-align:center;padding:6px 4px;border-radius:8px;
-    background:var(--soft);transition:.2s;
-  }
-  .progress-steps .st.active{background:var(--accent-soft);color:var(--accent);font-weight:700;}
-  .progress-steps .st.done{background:var(--accent);color:#fff;}
-  .progress-bar{
-    height:6px;background:var(--soft);border-radius:99px;margin-top:10px;overflow:hidden;
-  }
-  .progress-bar .fill{
-    height:100%;background:linear-gradient(90deg,var(--accent),var(--accent-2));
-    width:0;transition:width .3s;
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .loading-text{
+    font-size:15px;font-weight:600;color:var(--ink);letter-spacing:.5px;
   }
 
+  /* ================= Wizard shell ================= */
+  .wizard{max-width:920px;margin:24px auto;padding:0 16px;}
+  .wizard-card{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 6px 24px rgba(0,0,0,.04);overflow:hidden;}
+  .wizard-header{padding:22px 26px 14px;border-bottom:1px solid var(--line);background:linear-gradient(135deg,#fff, #f7f5ef);}
+  .wizard-header .top-row{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap;}
+  .wizard-header h1{margin:0;font-size:20px;font-weight:800;}
+  .wizard-header p{margin:4px 0 0;font-size:13px;color:var(--muted);}
+  .header-actions{display:flex;gap:6px;flex-wrap:wrap;}
+  .progress-wrap{margin-top:16px;}
+  .progress-steps{display:flex;gap:6px;flex-wrap:wrap;font-size:11.5px;color:var(--muted);justify-content:space-between;}
+  .progress-steps .st{flex:1;min-width:70px;text-align:center;padding:6px 4px;border-radius:8px;background:var(--soft);transition:.2s;cursor:pointer;}
+  .progress-steps .st.active{background:var(--accent-soft);color:var(--accent);font-weight:700;}
+  .progress-steps .st.done{background:var(--accent);color:#fff;}
+  .progress-bar{height:6px;background:var(--soft);border-radius:99px;margin-top:10px;overflow:hidden;}
+  .progress-bar .fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent-2));width:0;transition:width .3s;}
+
   .wizard-body{padding:24px 26px;}
-  .wizard-footer{
-    padding:16px 26px;border-top:1px solid var(--line);
-    display:flex;justify-content:space-between;gap:8px;background:#fbfaf6;
-  }
-  .btn{
-    border:0;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:600;
-    cursor:pointer;transition:.15s;
-  }
+  .wizard-footer{padding:16px 26px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:8px;background:#fbfaf6;flex-wrap:wrap;}
+  .btn{border:0;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;transition:.15s;display:inline-flex;align-items:center;justify-content:center;gap:2px;}
   .btn-primary{background:var(--accent);color:#fff;}
-  .btn-primary:hover{background:#5f7a6a;}
+  .btn-primary:hover{filter:brightness(.92);}
   .btn-ghost{background:var(--soft);color:var(--ink);}
   .btn-ghost:hover{background:#ece7d9;}
   .btn-gold{background:var(--gold);color:#fff;}
-  .btn-gold:hover{background:#9a7940;}
+  .btn-gold:hover{filter:brightness(.92);}
   .btn-sm{padding:6px 12px;font-size:12px;border-radius:8px;}
   .btn-danger{background:#e9d1c8;color:#8a4a2e;}
   .btn-danger:hover{background:#e0bfb2;}
+  .btn-outline{background:#fff;border:1px solid var(--line);color:var(--ink);}
+  .btn-outline:hover{background:var(--soft);}
 
   .step{display:none;animation:fade .25s;}
   .step.active{display:block;}
@@ -88,77 +108,68 @@
   .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px 14px;}
   .grid .full{grid-column:1/-1;}
   .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px;font-weight:500;}
-  .field input,.field textarea,.field select{
-    width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:9px;
-    background:#fff;font-size:13px;outline:none;transition:.15s;
-  }
+  .field input,.field textarea,.field select{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:#fff;font-size:13px;outline:none;transition:.15s;}
   .field input:focus,.field textarea:focus,.field select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);}
   .field textarea{resize:vertical;min-height:70px;}
 
-  /* Meal option editor */
-  .option-block{
-    background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px;
-  }
-  .option-block .oh{
-    display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;
-  }
+  /* Color/Logo panel */
+  .panel{background:#fbfaf6;border:1px solid var(--line);border-radius:12px;padding:14px;margin-top:6px;}
+  .panel h3{margin:0 0 10px;font-size:13.5px;color:var(--accent);display:flex;align-items:center;gap:6px;}
+  .colors-row{display:flex;flex-wrap:wrap;gap:14px;}
+  .color-item{display:flex;flex-direction:column;font-size:11.5px;color:var(--muted);gap:4px;align-items:center;}
+  .color-item input[type=color]{width:44px;height:44px;border:1px solid var(--line);border-radius:10px;cursor:pointer;background:#fff;padding:2px;}
+  .logo-row{display:flex;gap:14px;align-items:center;flex-wrap:wrap;}
+  .logo-preview{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:22px;overflow:hidden;border:1px solid var(--line);}
+  .logo-preview img{width:100%;height:100%;object-fit:cover;}
+
+  /* Option editor */
+  .option-block{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px;}
+  .option-block .oh{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px;flex-wrap:wrap;}
   .option-block .oh .lbl{font-weight:700;font-size:13px;color:var(--accent);}
   .chip-editor{display:flex;flex-wrap:wrap;gap:6px;align-items:center;}
-  .chip{
-    background:var(--soft);border-radius:6px;padding:4px 10px;font-size:12px;
-    display:inline-flex;align-items:center;gap:6px;
-  }
-  .chip .rm{cursor:pointer;color:var(--muted);font-weight:700;}
+  .chips{display:contents;}
+  .chip{background:var(--soft);border-radius:6px;padding:4px 10px;font-size:12px;display:inline-flex;align-items:center;gap:6px;}
+  .chip .rm{cursor:pointer;color:var(--muted);font-weight:700;display:inline-flex;align-items:center;}
   .chip .rm:hover{color:#8a4a2e;}
-  .chip-add{
-    display:flex;gap:6px;flex:1;min-width:180px;
-  }
-  .chip-add input{
-    flex:1;padding:6px 10px;border:1px dashed var(--line);border-radius:6px;font-size:12px;background:#fff;
-  }
-  .option-block .oh-actions{display:flex;gap:6px;align-items:center;}
+  .chip .rm .material-symbols-outlined{font-size:14px;}
+  .chip-add{display:flex;gap:6px;flex:1;min-width:180px;}
+  .chip-add input{flex:1;padding:6px 10px;border:1px dashed var(--line);border-radius:6px;font-size:12px;background:#fff;}
+  .option-block .oh-actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
   .full-toggle{font-size:11.5px;color:var(--muted);display:inline-flex;align-items:center;gap:4px;cursor:pointer;}
 
-  .add-more{
-    width:100%;padding:10px;border:1px dashed var(--accent-2);color:var(--accent);
-    background:var(--accent-soft);border-radius:10px;cursor:pointer;font-weight:600;font-size:13px;
-  }
-  .add-more:hover{background:#dfeae1;}
+  .add-more{width:100%;padding:10px;border:1px dashed var(--accent-2);color:var(--accent);background:var(--accent-soft);border-radius:10px;cursor:pointer;font-weight:600;font-size:13px;display:inline-flex;align-items:center;justify-content:center;gap:6px;}
+  .add-more:hover{filter:brightness(.96);}
 
-  .snack-block, .note-block{
-    border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px;background:#fbfaf6;
-  }
-  .snack-block .sh, .note-block .nh{
-    display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;
-  }
-  .snack-block .sh input, .note-block .nh input{
-    padding:6px 10px;border:1px solid var(--line);border-radius:8px;font-size:12.5px;
-    flex:1;margin-inline-start:8px;
-  }
+  .snack-block, .note-block{border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px;background:#fbfaf6;}
+  .snack-block .sh, .note-block .nh{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:8px;flex-wrap:wrap;}
+  .snack-block .sh input, .note-block .nh input{padding:6px 10px;border:1px solid var(--line);border-radius:8px;font-size:12.5px;flex:1;min-width:140px;}
   .snack-block .sh .lbl, .note-block .nh .lbl{font-weight:700;font-size:13px;color:var(--accent);white-space:nowrap;}
   .note-block textarea{width:100%;min-height:60px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-size:12.5px;}
   .note-block .type-row{margin-top:6px;display:flex;gap:10px;font-size:12px;color:var(--muted);}
 
-  /* ================= Preview (identical to template) ================= */
+  .autosave-hint{font-size:11px;color:var(--muted);margin-top:6px;}
+
+  /* Modal */
+  .modal-backdrop{position:fixed;inset:0;background:rgba(20,25,28,.55);z-index:1000;display:none;align-items:center;justify-content:center;padding:12px;}
+  .modal-backdrop.open{display:flex;}
+  .modal{background:#fff;border-radius:14px;max-width:960px;width:100%;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3);}
+  .modal-head{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:8px;}
+  .modal-head h3{margin:0;font-size:15px;}
+  .modal-body{padding:12px;overflow:auto;background:var(--bg);}
+
+  /* ================= Preview ================= */
   #previewArea{background:var(--bg);padding:12px 0;}
-  .page{
-    width:210mm;height:297mm;padding:14mm 15mm 14mm;margin:10mm auto;
-    background:var(--page);box-shadow:0 4px 24px rgba(0,0,0,.06);
-    position:relative;display:flex;flex-direction:column;overflow:hidden;
-    page-break-after:always;break-after:page;
-  }
+  #modalPreviewArea{background:var(--bg);}
+  .page{width:210mm;min-height:297mm;padding:14mm 15mm 14mm;margin:10mm auto;background:var(--page);box-shadow:0 4px 24px rgba(0,0,0,.06);position:relative;display:flex;flex-direction:column;overflow:hidden;page-break-after:always;break-after:page;}
   .page:last-child{page-break-after:auto;break-after:auto;}
   .page.dense .notes{gap:5px;}
   .page.dense .note{padding:7px 12px;font-size:11px;line-height:1.7;}
   .page.dense .note-title{font-size:11.5px;}
 
-  .hdr{display:flex;justify-content:space-between;align-items:flex-end;
-    padding-bottom:10px;border-bottom:1px solid var(--line);margin-bottom:14px;}
+  .hdr{display:flex;justify-content:space-between;align-items:flex-end;padding-bottom:10px;border-bottom:1px solid var(--line);margin-bottom:14px;gap:12px;}
   .hdr .brand{display:flex;align-items:center;gap:12px;}
-  .hdr .mark{width:44px;height:44px;border-radius:50%;
-    background:linear-gradient(135deg,var(--accent),var(--accent-2));
-    color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;
-    box-shadow:0 3px 10px rgba(111,139,122,.35);}
+  .hdr .mark{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-2));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;box-shadow:0 3px 10px rgba(111,139,122,.35);overflow:hidden;}
+  .hdr .mark img{width:100%;height:100%;object-fit:cover;}
   .hdr h1{font-size:15px;margin:0;font-weight:700;letter-spacing:.2px;}
   .hdr .sub{font-size:11px;color:var(--muted);margin-top:2px;}
   .hdr .meta{text-align:left;font-size:10.5px;color:var(--muted);line-height:1.6;}
@@ -169,98 +180,145 @@
   .cover-title h2{font-size:34px;margin:14px 0 8px;font-weight:800;}
   .cover-title p{color:var(--muted);font-size:14px;margin:0;}
 
-  .patient{background:var(--soft);border:1px solid var(--line);border-radius:14px;
-    padding:18px 22px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px 22px;margin:12mm 0 0;}
+  .patient{background:var(--soft);border:1px solid var(--line);border-radius:14px;padding:18px 22px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px 22px;margin:12mm 0 0;}
   .patient .row{display:flex;flex-direction:column;font-size:12px;}
   .patient .row span{color:var(--muted);font-size:10.5px;margin-bottom:2px;}
   .patient .row b{font-size:13px;font-weight:600;}
   .patient .row.full{grid-column:1/-1;}
 
-  .clinician{margin-top:10mm;text-align:center;padding:16px;border:1px dashed var(--line);
-    border-radius:12px;background:#fff;}
+  .clinician{margin-top:10mm;text-align:center;padding:16px;border:1px dashed var(--line);border-radius:12px;background:#fff;}
   .clinician .name{font-weight:700;font-size:15px;}
   .clinician .role{color:var(--muted);font-size:11.5px;margin-top:2px;}
   .clinician .lic{margin-top:6px;font-size:11px;color:var(--gold);letter-spacing:1px;}
 
-  .section-title{display:flex;align-items:center;gap:10px;margin:6px 0 12px;padding:8px 12px;
-    background:var(--accent-soft);border-right:4px solid var(--accent);border-radius:8px;}
+  .section-title{display:flex;align-items:center;gap:10px;margin:6px 0 12px;padding:8px 12px;background:var(--accent-soft);border-right:4px solid var(--accent);border-radius:8px;}
   .section-title .fa{font-size:16px;font-weight:700;}
   .section-title .en{font-size:11px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;}
 
   .options{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px;}
-  .options li{display:flex;align-items:flex-start;gap:10px;
-    background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px;
-    font-size:12.5px;line-height:1.9;}
-  .options li .num{flex:0 0 26px;height:26px;border-radius:50%;
-    background:var(--accent-soft);color:var(--accent);
-    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;}
+  .options li{display:flex;align-items:flex-start;gap:10px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:12.5px;line-height:1.9;}
+  .options li .num{flex:0 0 26px;height:26px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;}
   .options li .items{flex:1;display:flex;flex-wrap:wrap;gap:6px 10px;}
   .options li .items .chip{background:var(--soft);border-radius:6px;padding:2px 8px;font-size:12px;color:var(--ink);}
   .options li.full .items .chip{background:var(--blue-soft);}
 
   .supplements{display:flex;flex-direction:column;gap:8px;}
-  .supp{display:flex;align-items:center;gap:12px;
-    background:var(--accent-soft);border-radius:10px;padding:12px 14px;font-size:12.5px;}
+  .supp{display:flex;align-items:center;gap:12px;background:var(--accent-soft);border-radius:10px;padding:12px 14px;font-size:12.5px;}
   .supp .dot{width:10px;height:10px;border-radius:50%;background:var(--accent);flex-shrink:0;}
 
   .notes{display:flex;flex-direction:column;gap:9px;}
-  .note{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 14px;
-    font-size:12px;line-height:1.9;display:flex;gap:10px;}
+  .note{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 14px;font-size:12px;line-height:1.9;display:flex;gap:10px;}
   .note::before{content:"";flex:0 0 6px;background:var(--accent-2);border-radius:3px;margin-top:6px;height:14px;}
   .note.warn{background:#fdf6f2;border-color:#f0d9c8;}
   .note.warn::before{background:var(--gold);}
   .note-title{font-weight:700;color:var(--accent);display:block;margin-bottom:2px;font-size:12.5px;}
   .note.warn .note-title{color:var(--gold);}
 
-  .footer{margin-top:auto;padding-top:12px;border-top:1px solid var(--line);
-    display:flex;justify-content:space-between;align-items:center;font-size:10.5px;color:var(--muted);}
+  .footer{margin-top:auto;padding-top:12px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;font-size:10.5px;color:var(--muted);gap:8px;}
   .footer .addr{display:flex;flex-direction:column;gap:2px;}
-  .pagenum{font-variant-numeric:tabular-nums;background:var(--soft);
-    padding:3px 10px;border-radius:20px;font-size:10.5px;}
-
-  .preview-toolbar{
-    max-width:900px;margin:0 auto 8px;padding:12px 16px;
-    display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;
-  }
+  .pagenum{font-variant-numeric:tabular-nums;background:var(--soft);padding:3px 10px;border-radius:20px;font-size:10.5px;}
 
   @media (max-width:640px){
     .grid{grid-template-columns:1fr;}
-    .page{width:100%;height:auto;padding:20px;}
+    .page{width:100%;min-height:auto;padding:20px;margin:10px auto;}
+    .patient{grid-template-columns:1fr 1fr;}
   }
 
-  /* Print: only preview */
   @page{ size:A4 portrait; margin:0; }
   @media print{
     html,body{background:#fff;}
     body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-    .wizard, .preview-toolbar{display:none !important;}
+    .wizard, .modal-backdrop{display:none !important;}
     #previewArea{padding:0;background:#fff;}
     .page{margin:0;box-shadow:none;width:210mm;min-height:297mm;height:auto;}
   }
+
+  .datepicker-plot-area{font-family:'Vazirmatn',sans-serif !important;}
 </style>
 </head>
 <body>
 
-<!-- ============ WIZARD ============ -->
+<!-- Loading screen -->
+<div id="loadingScreen" class="loading-screen">
+  <div class="loading-box">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">در حال بارگذاری</div>
+  </div>
+</div>
+
 <div class="wizard" id="wizard">
   <div class="wizard-card">
     <div class="wizard-header">
-      <h1>ویزارد ساخت برنامه غذایی</h1>
-      <p>مرحله به مرحله اطلاعات را وارد کنید و در پایان پیش‌نمایش و خروجی PDF بگیرید.</p>
+      <div class="top-row">
+        <div>
+          <h1>ویزارد ساخت برنامه غذایی</h1>
+          <p>مرحله به مرحله اطلاعات را وارد کنید و در پایان خروجی PDF بگیرید.</p>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn-gold btn-sm" onclick="downloadPDF()" title="خروجی PDF"><span class="material-symbols-outlined">picture_as_pdf</span> خروجی PDF</button>
+          <button class="btn btn-primary btn-sm" onclick="downloadHTML()" title="خروجی HTML قابل دانلود"><span class="material-symbols-outlined">download</span> خروجی HTML</button>
+          <button class="btn btn-outline btn-sm" onclick="openPreviewModal()" title="پیش‌نمایش سریع"><span class="material-symbols-outlined">visibility</span> پیش‌نمایش</button>
+          <button class="btn btn-danger btn-sm" onclick="resetForm()" title="ریست کردن فرم"><span class="material-symbols-outlined">delete</span> ریست فرم</button>
+        </div>
+      </div>
       <div class="progress-wrap">
         <div class="progress-steps" id="progressSteps"></div>
         <div class="progress-bar"><div class="fill" id="progressFill"></div></div>
+        <div class="autosave-hint" id="autosaveHint">اطلاعات به صورت خودکار در مرورگر شما ذخیره می‌شود (تا ۲۴ ساعت).</div>
       </div>
     </div>
 
     <div class="wizard-body" id="wizardBody">
-      <!-- Step 1: Personal Info -->
+
+      <!-- Step 0: Platform settings (persistent) -->
       <div class="step active" data-step="0">
-        <h2>اطلاعات فردی</h2>
+        <h2>اطلاعات اصلی پلتفرم</h2>
+        <p class="hint">این اطلاعات ثابت است و برای همیشه در مرورگر شما ذخیره می‌شود. تا زمانی که خودتان ادیت نکنید تغییر نمی‌کند.</p>
+        <div class="grid">
+          <div class="field"><label>نام رژیم درمانگر</label><input id="p_clinician" placeholder="مثال: فاطمه حیدری"/></div>
+          <div class="field"><label>شماره نظام پزشکی</label><input id="p_lic" placeholder="۱۱۴۴۲"/></div>
+          <div class="field full"><label>اسم مجموعه</label><input id="p_brand" placeholder="مثال: استودیو ورزشی آواتار"/></div>
+          <div class="field full"><label>آدرس</label><input id="p_addr" placeholder="سلمانشهر، خیابان باهنر، مجموعه ورزشی اوتار"/></div>
+          <div class="field"><label>شماره تماس</label><input id="p_phone" placeholder="۰۹۳۵-۱۸۹۶۶۰۲"/></div>
+          <div class="field"><label>اینستاگرام</label><input id="p_instagram" placeholder="@diet_tisa | @avatar_sportstudio"/></div>
+        </div>
+
+        <div class="panel">
+          <h3><span class="material-symbols-outlined">image</span> لوگو</h3>
+          <div class="logo-row">
+            <div class="logo-preview" id="logoPreview"><span id="logoLetter">A</span></div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+              <input type="file" id="p_logo_file" accept="image/*" style="font-size:12px;"/>
+              <div style="display:flex;gap:6px;">
+                <button class="btn btn-danger btn-sm" onclick="clearLogo()"><span class="material-symbols-outlined">delete</span> حذف لوگو</button>
+                <span style="font-size:11px;color:var(--muted);align-self:center;">اگر خالی باشد، از حالت پیش‌فرض استفاده می‌شود.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3><span class="material-symbols-outlined">palette</span> تنظیمات رنگ صفحه</h3>
+          <div class="colors-row">
+            <div class="color-item"><input type="color" id="c_accent" value="#6f8b7a"/><span>اصلی</span></div>
+            <div class="color-item"><input type="color" id="c_accent2" value="#8aa89a"/><span>مکمل</span></div>
+            <div class="color-item"><input type="color" id="c_gold" value="#b08a4a"/><span>طلایی</span></div>
+            <div class="color-item"><input type="color" id="c_ink" value="#1f2a2e"/><span>متن</span></div>
+            <div class="color-item"><input type="color" id="c_bg" value="#fafaf7"/><span>پس‌زمینه</span></div>
+            <div class="color-item" style="justify-content:flex-end;">
+              <button class="btn btn-ghost btn-sm" onclick="resetColors()"><span class="material-symbols-outlined">restart_alt</span> بازگردانی</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 1: Client Info -->
+      <div class="step" data-step="1">
+        <h2>اطلاعات فردی کلاینت</h2>
         <p class="hint">مشخصات مراجع و هدف رژیم را وارد کنید.</p>
         <div class="grid">
           <div class="field"><label>نام و نام خانوادگی</label><input id="f_name" placeholder="مثال: حدیث اقلیمی"/></div>
-          <div class="field"><label>تاریخ</label><input id="f_date" placeholder="۱۴۰۵/۰۴/۱۴"/></div>
+          <div class="field"><label>تاریخ (شمسی)</label><input id="f_date" placeholder="۱۴۰۵/۰۴/۱۴" autocomplete="off"/></div>
           <div class="field"><label>سن</label><input id="f_age" placeholder="۴۳"/></div>
           <div class="field"><label>قد (cm)</label><input id="f_height" placeholder="۱۶۰"/></div>
           <div class="field"><label>وزن (kg)</label><input id="f_weight" placeholder="۷۲.۳"/></div>
@@ -272,152 +330,193 @@
               <option>پایداری وزن</option>
             </select>
           </div>
-          <div class="field full"><label>سابقه بیماری</label><textarea id="f_disease" placeholder="مثال: کم کاری تیروئید، ..."></textarea></div>
+          <div class="field full"><label>سابقه بیماری</label><textarea id="f_disease" placeholder="مثال: کم‌کاری تیروئید، ..."></textarea></div>
           <div class="field full"><label>سایر اطلاعات</label><textarea id="f_other" placeholder="مثال: تمرین فیتنس"></textarea></div>
-          <div class="field"><label>نام رژیم درمانگر</label><input id="f_clinician" value="فاطمه حیدری"/></div>
-          <div class="field"><label>شماره نظام پزشکی</label><input id="f_lic" value="۱۱۴۴۲"/></div>
-          <div class="field full"><label>عنوان مجموعه</label><input id="f_brand" value="استودیو ورزشی اوتار"/></div>
-          <div class="field full"><label>آدرس و تماس (فوتر)</label><input id="f_addr" value="سلمانشهر، خیابان باهنر، مجموعه ورزشی اوتار · ۰۹۳۵-۱۸۹۶۶۰۲ · avatar_sportstudio"/></div>
         </div>
       </div>
 
       <!-- Step 2: Breakfast -->
-      <div class="step" data-step="1">
+      <div class="step" data-step="2">
         <h2>صبحانه</h2>
-        <p class="hint">می‌توانید چند گزینه اضافه کنید. برای هر گزینه چند «چیپس غذایی» بنویسید و Enter بزنید.</p>
+        <p class="hint">برای هر گزینه چند «چیپس غذایی» بنویسید و Enter بزنید.</p>
         <div class="field full" style="margin-bottom:12px;">
           <label>یادداشت ناشتا (اختیاری)</label>
           <textarea id="f_fasting" placeholder="مثال: ۱ شات زردچوبه + فلفل سیاه + لیموترش ..."></textarea>
         </div>
         <div id="breakfast_options"></div>
-        <button class="add-more" onclick="addOption('breakfast_options')">+ افزودن گزینه جدید</button>
+        <button class="add-more" onclick="addOption('breakfast_options')"><span class="material-symbols-outlined">add</span> افزودن گزینه جدید</button>
       </div>
 
-      <!-- Step 3: Snacks (repeatable sections) -->
-      <div class="step" data-step="2">
-        <h2>میان‌وعده‌ها</h2>
-        <p class="hint">می‌توانید چند بخش میان‌وعده اضافه کنید. هر بخش، گزینه‌های خودش را دارد.</p>
-        <div id="snacks_container"></div>
-        <button class="add-more" onclick="addSnackSection()">+ افزودن میان‌وعده جدید</button>
+      <!-- Step 3: Morning snack -->
+      <div class="step" data-step="3">
+        <h2>میان‌وعده صبح</h2>
+        <p class="hint">گزینه‌های میان‌وعده صبح.</p>
+        <div id="morning_options"></div>
+        <button class="add-more" onclick="addOption('morning_options')"><span class="material-symbols-outlined">add</span> افزودن گزینه جدید</button>
       </div>
 
       <!-- Step 4: Lunch -->
-      <div class="step" data-step="3">
+      <div class="step" data-step="4">
         <h2>ناهار</h2>
-        <p class="hint">چند گزینه با چیپس‌های غذایی وارد کنید.</p>
+        <p class="hint">گزینه‌های ناهار.</p>
         <div id="lunch_options"></div>
-        <button class="add-more" onclick="addOption('lunch_options')">+ افزودن گزینه جدید</button>
+        <button class="add-more" onclick="addOption('lunch_options')"><span class="material-symbols-outlined">add</span> افزودن گزینه جدید</button>
       </div>
 
       <!-- Step 5: Afternoon snack -->
-      <div class="step" data-step="4">
-        <h2>عصرانه / میان‌وعده عصر</h2>
-        <p class="hint">گزینه‌های عصرانه را وارد کنید.</p>
+      <div class="step" data-step="5">
+        <h2>میان‌وعده عصر</h2>
+        <p class="hint">گزینه‌های میان‌وعده عصر.</p>
         <div id="afternoon_options"></div>
-        <button class="add-more" onclick="addOption('afternoon_options')">+ افزودن گزینه جدید</button>
+        <button class="add-more" onclick="addOption('afternoon_options')"><span class="material-symbols-outlined">add</span> افزودن گزینه جدید</button>
       </div>
 
       <!-- Step 6: Dinner -->
-      <div class="step" data-step="5">
+      <div class="step" data-step="6">
         <h2>شام</h2>
-        <p class="hint">چند گزینه با چیپس‌های غذایی وارد کنید.</p>
+        <p class="hint">گزینه‌های شام.</p>
         <div id="dinner_options"></div>
-        <button class="add-more" onclick="addOption('dinner_options')">+ افزودن گزینه جدید</button>
+        <button class="add-more" onclick="addOption('dinner_options')"><span class="material-symbols-outlined">add</span> افزودن گزینه جدید</button>
       </div>
 
       <!-- Step 7: Late night -->
-      <div class="step" data-step="6">
+      <div class="step" data-step="7">
         <h2>وعده آخر شب</h2>
         <p class="hint">گزینه‌های میل قبل از خواب.</p>
         <div id="latenight_options"></div>
-        <button class="add-more" onclick="addOption('latenight_options')">+ افزودن گزینه جدید</button>
+        <button class="add-more" onclick="addOption('latenight_options')"><span class="material-symbols-outlined">add</span> افزودن گزینه جدید</button>
       </div>
 
       <!-- Step 8: Supplements -->
-      <div class="step" data-step="7">
+      <div class="step" data-step="8">
         <h2>مکمل‌های مورد نیاز</h2>
         <p class="hint">هر مکمل را در یک ردیف وارد کنید.</p>
         <div id="supplements_container"></div>
-        <button class="add-more" onclick="addSupplement()">+ افزودن مکمل</button>
+        <button class="add-more" onclick="addSupplement()"><span class="material-symbols-outlined">add</span> افزودن مکمل</button>
       </div>
 
       <!-- Step 9: Notes -->
-      <div class="step" data-step="8">
+      <div class="step" data-step="9">
         <h2>توضیحات و نکات</h2>
-        <p class="hint">هر تعداد نکته که می‌خواهید اضافه کنید. نکات نوع «هشدار» با رنگ متفاوت نمایش داده می‌شوند.</p>
+        <p class="hint">نکات نوع «هشدار» با رنگ متفاوت نمایش داده می‌شوند.</p>
         <div id="notes_container"></div>
-        <button class="add-more" onclick="addNote()">+ افزودن نکته</button>
+        <button class="add-more" onclick="addNote()"><span class="material-symbols-outlined">add</span> افزودن نکته</button>
       </div>
 
-      <!-- Step 10: Preview -->
-      <div class="step" data-step="9">
-        <h2>پیش‌نمایش نهایی</h2>
-        <p class="hint">در ادامه پیش‌نمایش برنامه غذایی نمایش داده می‌شود. با دکمه «دانلود PDF» می‌توانید ذخیره کنید.</p>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <button class="btn btn-gold" onclick="downloadPDF()">⬇ دانلود PDF</button>
-          <button class="btn btn-ghost" onclick="renderPreview()">↻ به‌روزرسانی پیش‌نمایش</button>
+      <!-- Step 10: Export -->
+      <div class="step" data-step="10">
+        <h2>خروجی گرفتن</h2>
+        <p class="hint">پیش‌نمایش نهایی برنامه غذایی. فایل مستقیم روی دستگاه ذخیره می‌شود.</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+          <button class="btn btn-gold" onclick="downloadPDF()"><span class="material-symbols-outlined">picture_as_pdf</span> دانلود PDF</button>
+          <button class="btn btn-primary" onclick="downloadHTML()"><span class="material-symbols-outlined">download</span> دانلود HTML</button>
+          <button class="btn btn-ghost" onclick="renderPreview('previewArea')"><span class="material-symbols-outlined">refresh</span> به‌روزرسانی پیش‌نمایش</button>
+          <button class="btn btn-outline" onclick="window.print()"><span class="material-symbols-outlined">print</span> چاپ</button>
         </div>
       </div>
+
     </div>
 
     <div class="wizard-footer">
-      <button class="btn btn-ghost" id="prevBtn" onclick="prevStep()">مرحله قبل</button>
-      <button class="btn btn-primary" id="nextBtn" onclick="nextStep()">مرحله بعد</button>
+      <button class="btn btn-ghost" id="prevBtn" onclick="prevStep()"><span class="material-symbols-outlined">chevron_right</span> مرحله قبل</button>
+      <div style="display:flex;gap:6px;">
+        <button class="btn btn-outline" onclick="openPreviewModal()"><span class="material-symbols-outlined">visibility</span> پیش‌نمایش</button>
+        <button class="btn btn-primary" id="nextBtn" onclick="nextStep()">مرحله بعد <span class="material-symbols-outlined">chevron_left</span></button>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- ============ PREVIEW ============ -->
-<div class="preview-toolbar" id="previewToolbar" style="display:none;">
-  <div style="font-weight:700;">پیش‌نمایش برنامه غذایی</div>
-  <div style="display:flex;gap:8px;">
-    <button class="btn btn-ghost btn-sm" onclick="scrollTo({top:0,behavior:'smooth'})">↑ بازگشت به ویزارد</button>
-    <button class="btn btn-gold btn-sm" onclick="downloadPDF()">⬇ دانلود PDF</button>
+<div id="previewArea"></div>
+
+<div class="modal-backdrop" id="previewModal" onclick="if(event.target===this)closePreviewModal()">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>پیش‌نمایش برنامه غذایی</h3>
+      <div style="display:flex;gap:6px;">
+        <button class="btn btn-gold btn-sm" onclick="downloadPDF()"><span class="material-symbols-outlined">picture_as_pdf</span> دانلود PDF</button>
+        <button class="btn btn-primary btn-sm" onclick="downloadHTML()"><span class="material-symbols-outlined">download</span> دانلود HTML</button>
+        <button class="btn btn-ghost btn-sm" onclick="closePreviewModal()"><span class="material-symbols-outlined">close</span> بستن</button>
+      </div>
+    </div>
+    <div class="modal-body" id="modalPreviewArea"></div>
   </div>
 </div>
-<div id="previewArea"></div>
 
 <script>
 /* ============================================================
-   State
+   Constants / State
 ============================================================ */
 const STEP_LABELS = [
-  "اطلاعات فردی","صبحانه","میان‌وعده‌ها","ناهار","عصرانه","شام","آخر شب","مکمل‌ها","توضیحات","پیش‌نمایش"
+  "پلتفرم","کلاینت","صبحانه","میان‌وعده صبح","ناهار","میان‌وعده عصر","شام","آخر شب","مکمل‌ها","توضیحات","خروجی"
 ];
-let currentStep = 0;
 const totalSteps = STEP_LABELS.length;
+let currentStep = 0;
+
+const LS_PLATFORM = 'dw_platform_v2';
+const LS_LOGO     = 'dw_logo_v1';
+const LS_COLORS   = 'dw_colors_v1';
+const LS_FORM     = 'dw_form_v1';
+
+const DEFAULT_COLORS = {
+  accent:'#6f8b7a', accent2:'#8aa89a', gold:'#b08a4a',
+  ink:'#1f2a2e', bg:'#fafaf7'
+};
+
+const DEFAULT_PLATFORM = {
+  clinician: 'فاطمه حیدری',
+  lic: '۱۱۴۴۲',
+  brand: 'استودیو ورزشی آواتار',
+  addr: 'سلمانشهر، خیابان باهنر، مجموعه ورزشی اوتار',
+  phone: '۰۹۳۵-۱۸۹۶۶۰۲',
+  instagram: '@diet_tisa | @avatar_sportstudio'
+};
 
 /* ============================================================
-   Progress
+   Helpers
+============================================================ */
+function v(id){return (document.getElementById(id)?.value||'').trim();}
+function toPersianDigit(n){const p=['۰','۱','۲','۳','۴','۵','۶','۷','۸','۹'];return String(n).replace(/\d/g,d=>p[+d]);}
+function esc(s){return (s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function todayJalali(){
+  try{
+    const pd = new persianDate().toLocale('fa');
+    return pd.format('YYYY/MM/DD');
+  }catch(e){
+    const d = new Date();
+    return d.toLocaleDateString('fa-IR');
+  }
+}
+
+/* ============================================================
+   Progress / Steps
 ============================================================ */
 function renderProgress(){
   const wrap = document.getElementById('progressSteps');
   wrap.innerHTML = STEP_LABELS.map((l,i)=>{
     const cls = i===currentStep?'active':(i<currentStep?'done':'');
-    return `<div class="st ${cls}">${i+1}. ${l}</div>`;
+    return `<div class="st ${cls}" onclick="showStep(${i})">${toPersianDigit(i+1)}. ${l}</div>`;
   }).join('');
   document.getElementById('progressFill').style.width = ((currentStep)/(totalSteps-1)*100)+'%';
   document.getElementById('prevBtn').style.visibility = currentStep===0?'hidden':'visible';
   const next = document.getElementById('nextBtn');
-  next.textContent = currentStep===totalSteps-1 ? 'پایان' : 'مرحله بعد';
+  next.innerHTML = currentStep===totalSteps-1 ? 'پایان' : 'مرحله بعد <span class="material-symbols-outlined">chevron_left</span>';
+  next.style.visibility = currentStep===totalSteps-1 ? 'hidden':'visible';
 }
-
 function showStep(i){
   document.querySelectorAll('.step').forEach(s=>s.classList.remove('active'));
   document.querySelector(`.step[data-step="${i}"]`).classList.add('active');
   currentStep = i;
   renderProgress();
-  const toolbar = document.getElementById('previewToolbar');
-  if(i===totalSteps-1){ renderPreview(); toolbar.style.display='flex'; }
-  else { toolbar.style.display='none'; document.getElementById('previewArea').innerHTML=''; }
+  if(i===totalSteps-1){ renderPreview('previewArea'); }
+  else { document.getElementById('previewArea').innerHTML=''; }
   window.scrollTo({top:0,behavior:'smooth'});
 }
-
 function nextStep(){ if(currentStep<totalSteps-1) showStep(currentStep+1); }
 function prevStep(){ if(currentStep>0) showStep(currentStep-1); }
 
 /* ============================================================
-   Option editor (used by breakfast/lunch/dinner/afternoon/latenight/snack)
+   Option editor
 ============================================================ */
 function optionBlockHTML(){
   return `
@@ -426,60 +525,46 @@ function optionBlockHTML(){
         <div class="lbl">گزینه</div>
         <div class="oh-actions">
           <label class="full-toggle"><input type="checkbox" class="fullchk"/> عرض کامل (متن بلند)</label>
-          <button class="btn btn-danger btn-sm" onclick="this.closest('.option-block').remove()">حذف</button>
+          <button class="btn btn-danger btn-sm" onclick="removeBlock(this)"><span class="material-symbols-outlined">delete</span> حذف</button>
         </div>
       </div>
       <div class="chip-editor">
         <div class="chips"></div>
         <div class="chip-add">
           <input placeholder="یک آیتم بنویسید و Enter بزنید..." onkeydown="chipKey(event,this)"/>
-          <button class="btn btn-primary btn-sm" onclick="chipAdd(this)">افزودن</button>
+          <button class="btn btn-primary btn-sm" onclick="chipAdd(this)"><span class="material-symbols-outlined">add</span> افزودن</button>
         </div>
       </div>
     </div>`;
 }
-function addOption(containerId){
+function removeBlock(el){ el.closest('.option-block, .snack-block, .note-block').remove(); scheduleSave(); }
+function addOption(containerId, data){
   const c = document.getElementById(containerId);
   c.insertAdjacentHTML('beforeend', optionBlockHTML());
+  const block = c.lastElementChild;
+  if(data){
+    if(data.full) block.querySelector('.fullchk').checked = true;
+    (data.items||[]).forEach(t=>addChipTo(block, t));
+  }
+  scheduleSave();
 }
 function chipKey(e,inp){ if(e.key==='Enter'){e.preventDefault(); chipAdd(inp);} }
+function addChipTo(block, text){
+  const chips = block.querySelector('.chips');
+  const chip = document.createElement('span');
+  chip.className='chip';
+  chip.innerHTML = `<span class="txt"></span><span class="rm" title="حذف"><span class="material-symbols-outlined">close</span></span>`;
+  chip.querySelector('.txt').textContent = text;
+  chip.querySelector('.rm').onclick = ()=>{chip.remove();scheduleSave();};
+  chips.appendChild(chip);
+}
 function chipAdd(el){
   const wrap = el.closest('.option-block');
   const input = wrap.querySelector('.chip-add input');
   const val = input.value.trim(); if(!val) return;
-  const chips = wrap.querySelector('.chips');
-  const chip = document.createElement('span');
-  chip.className='chip';
-  chip.innerHTML = `<span class="txt"></span><span class="rm" title="حذف">×</span>`;
-  chip.querySelector('.txt').textContent = val;
-  chip.querySelector('.rm').onclick = ()=>chip.remove();
-  chips.appendChild(chip);
+  addChipTo(wrap, val);
   input.value=''; input.focus();
-}
-
-/* ============================================================
-   Snack sections (repeatable)
-============================================================ */
-let snackIdx = 0;
-function addSnackSection(title){
-  snackIdx++;
-  const c = document.getElementById('snacks_container');
-  const wrap = document.createElement('div');
-  wrap.className = 'snack-block';
-  wrap.innerHTML = `
-    <div class="sh">
-      <div class="lbl">میان‌وعده</div>
-      <input class="snack-title" value="${title||'میان‌وعده '+toPersianDigit(snackIdx)}"/>
-      <button class="btn btn-danger btn-sm" style="margin-inline-start:8px" onclick="this.closest('.snack-block').remove()">حذف بخش</button>
-    </div>
-    <div class="options-list"></div>
-    <button class="add-more" style="margin-top:8px;" onclick="addOptionInto(this)">+ افزودن گزینه</button>
-  `;
-  c.appendChild(wrap);
-}
-function addOptionInto(btn){
-  const list = btn.parentElement.querySelector('.options-list');
-  list.insertAdjacentHTML('beforeend', optionBlockHTML());
+  scheduleSave();
 }
 
 /* ============================================================
@@ -493,67 +578,55 @@ function addSupplement(val){
   row.innerHTML = `
     <div class="sh" style="margin:0;">
       <div class="lbl">مکمل</div>
-      <input class="supp-input" value="${val||''}" placeholder="مثال: ویتامین دی ۵۰۰۰۰ ماهی ۱ عدد بعد از ناهار"/>
-      <button class="btn btn-danger btn-sm" style="margin-inline-start:8px" onclick="this.closest('.snack-block').remove()">حذف</button>
+      <input class="supp-input" placeholder="مثال: ویتامین دی ۵۰۰۰۰ ماهی ۱ عدد بعد از ناهار"/>
+      <button class="btn btn-danger btn-sm" onclick="removeBlock(this)"><span class="material-symbols-outlined">delete</span> حذف</button>
     </div>`;
   c.appendChild(row);
+  if(val) row.querySelector('.supp-input').value = val;
+  row.querySelector('.supp-input').addEventListener('input', scheduleSave);
+  scheduleSave();
 }
 
 /* ============================================================
    Notes
 ============================================================ */
-function addNote(){
+function addNote(data){
   const c = document.getElementById('notes_container');
   const row = document.createElement('div');
   row.className='note-block';
+  const rn = 'nt_'+Math.random().toString(36).slice(2);
   row.innerHTML = `
     <div class="nh">
       <div class="lbl">نکته</div>
       <input class="note-title-inp" placeholder="عنوان (اختیاری)"/>
-      <button class="btn btn-danger btn-sm" style="margin-inline-start:8px" onclick="this.closest('.note-block').remove()">حذف</button>
+      <button class="btn btn-danger btn-sm" onclick="removeBlock(this)"><span class="material-symbols-outlined">delete</span> حذف</button>
     </div>
     <textarea class="note-text" placeholder="متن نکته..."></textarea>
     <div class="type-row">
-      <label><input type="radio" name="nt_${Math.random().toString(36).slice(2)}" class="nt-normal" checked/> عادی</label>
-      <label><input type="radio" name="_" class="nt-warn"/> هشدار</label>
+      <label><input type="radio" name="${rn}" class="nt-normal" checked/> عادی</label>
+      <label><input type="radio" name="${rn}" class="nt-warn"/> هشدار</label>
     </div>`;
-  // Fix radio group name
-  const rn = 'nt_'+Math.random().toString(36).slice(2);
-  row.querySelector('.nt-normal').name = rn;
-  row.querySelector('.nt-warn').name = rn;
   c.appendChild(row);
+  if(data){
+    row.querySelector('.note-title-inp').value = data.title||'';
+    row.querySelector('.note-text').value = data.text||'';
+    if(data.warn) row.querySelector('.nt-warn').checked = true;
+  }
+  row.querySelectorAll('input,textarea').forEach(i=>i.addEventListener('input',scheduleSave));
+  scheduleSave();
 }
 
 /* ============================================================
-   Helpers
-============================================================ */
-function toPersianDigit(n){
-  const p=['۰','۱','۲','۳','۴','۵','۶','۷','۸','۹'];
-  return String(n).replace(/\d/g,d=>p[+d]);
-}
-function esc(s){return (s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-
-/* ============================================================
-   Collect data from wizard
+   Collect data
 ============================================================ */
 function collectOptions(containerId){
   const c = document.getElementById(containerId);
+  if(!c) return [];
   return [...c.querySelectorAll('.option-block')].map(b=>{
     const full = b.querySelector('.fullchk').checked;
     const items = [...b.querySelectorAll('.chips .chip .txt')].map(x=>x.textContent);
     return {full, items};
   }).filter(o=>o.items.length);
-}
-function collectSnacks(){
-  return [...document.querySelectorAll('#snacks_container .snack-block')].map(sb=>{
-    const title = sb.querySelector('.snack-title').value.trim() || 'میان‌وعده';
-    const opts = [...sb.querySelectorAll('.option-block')].map(b=>{
-      const full = b.querySelector('.fullchk').checked;
-      const items = [...b.querySelectorAll('.chips .chip .txt')].map(x=>x.textContent);
-      return {full, items};
-    }).filter(o=>o.items.length);
-    return {title, options:opts};
-  });
 }
 function collectSupplements(){
   return [...document.querySelectorAll('#supplements_container .supp-input')]
@@ -568,43 +641,50 @@ function collectNotes(){
 }
 function collectData(){
   return {
+    clinician: v('p_clinician')||'—',
+    lic: v('p_lic')||'',
+    brand: v('p_brand')||'',
+    addr: v('p_addr')||'',
+    phone: v('p_phone')||'',
+    instagram: v('p_instagram')||'',
+    logo: localStorage.getItem(LS_LOGO)||'',
     name: v('f_name')||'—',
-    date: v('f_date')||'—',
+    date: v('f_date')||todayJalali(),
     age: v('f_age')||'—',
     height: v('f_height')||'—',
     weight: v('f_weight')||'—',
     goal: v('f_goal')||'—',
     disease: v('f_disease')||'—',
     other: v('f_other')||'—',
-    clinician: v('f_clinician')||'—',
-    lic: v('f_lic')||'',
-    brand: v('f_brand')||'',
-    addr: v('f_addr')||'',
     fasting: v('f_fasting'),
     breakfast: collectOptions('breakfast_options'),
-    snacks: collectSnacks(),
-    lunch: collectOptions('lunch_options'),
+    morning:   collectOptions('morning_options'),
+    lunch:     collectOptions('lunch_options'),
     afternoon: collectOptions('afternoon_options'),
-    dinner: collectOptions('dinner_options'),
+    dinner:    collectOptions('dinner_options'),
     latenight: collectOptions('latenight_options'),
     supplements: collectSupplements(),
     notes: collectNotes()
   };
 }
-function v(id){return (document.getElementById(id)?.value||'').trim();}
 
 /* ============================================================
-   Preview builders (match template markup)
+   Preview builders
 ============================================================ */
 let pageCounter = 0;
 function resetPages(){ pageCounter=0; }
+function logoHTML(d){
+  if(d.logo) return `<div class="mark"><img src="${d.logo}" alt="لوگو"/></div>`;
+  const letter = (d.brand||'A').trim().charAt(0) || 'A';
+  return `<div class="mark">${esc(letter)}</div>`;
+}
 function hdr(d, metaHTML){
   return `
   <div class="hdr">
     <div class="brand">
-      <div class="mark">A</div>
+      ${logoHTML(d)}
       <div>
-        <h1>${esc(d.brand)}</h1>
+        <h1>${esc(d.brand||'—')}</h1>
         <div class="sub">رژیم درمانگر: ${esc(d.clinician)}${d.lic?' · شماره نظام پزشکی: '+esc(d.lic):''}</div>
       </div>
     </div>
@@ -613,7 +693,7 @@ function hdr(d, metaHTML){
 }
 function footer(d){
   pageCounter++;
-  const parts = d.addr.split('·').map(s=>s.trim()).filter(Boolean);
+  const parts = [d.addr, d.phone, d.instagram].map(s=>(s||'').trim()).filter(Boolean);
   const addr = parts.map(p=>`<span>${esc(p)}</span>`).join('');
   return `
   <div class="footer">
@@ -632,14 +712,14 @@ function optionsHTML(opts){
 function sectionTitle(fa,en){
   return `<div class="section-title"><span class="fa">${esc(fa)}</span><span class="en">${esc(en)}</span></div>`;
 }
-
-function renderPreview(){
+function renderPreview(targetId){
   resetPages();
   const d = collectData();
-  const area = document.getElementById('previewArea');
+  const area = document.getElementById(targetId||'previewArea');
+  if(!area) return;
   const pages = [];
 
-  // Page 1: Cover
+  // Cover
   pages.push(`
     <section class="page">
       ${hdr(d, `برنامه غذایی اختصاصی<br/><b>تاریخ:</b> ${esc(d.date)}`)}
@@ -666,64 +746,52 @@ function renderPreview(){
       ${footer(d)}
     </section>`);
 
-  // Page: Breakfast + first snack (if any)
-  const firstSnack = d.snacks[0];
+  // Page 2: Breakfast + Morning snack
   pages.push(`
     <section class="page">
-      ${hdr(d, `${esc(d.name)}<br/><b>وعده:</b> صبحانه`)}
+      ${hdr(d, `${esc(d.name)}<br/><b>وعده:</b> صبحانه و میان‌وعده صبح`)}
       ${sectionTitle('صبحانه','Breakfast')}
       ${d.fasting?`<div class="fasting" style="background:#fffdf6;border:1px solid #efe5c8;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:12.5px;"><b style="color:var(--gold);">ناشتا:</b> ${esc(d.fasting)}</div>`:''}
       ${optionsHTML(d.breakfast)}
-      ${firstSnack?sectionTitle(firstSnack.title,'Snack')+optionsHTML(firstSnack.options):''}
+      <div style="margin-top:16px;">${sectionTitle('میان‌وعده صبح','Morning Snack')}</div>
+      ${optionsHTML(d.morning)}
       ${footer(d)}
     </section>`);
 
-  // Additional snack sections
-  for(let i=1;i<d.snacks.length;i++){
-    const s = d.snacks[i];
-    pages.push(`
-      <section class="page">
-        ${hdr(d, `${esc(d.name)}<br/><b>وعده:</b> ${esc(s.title)}`)}
-        ${sectionTitle(s.title,'Snack')}
-        ${optionsHTML(s.options)}
-        ${footer(d)}
-      </section>`);
-  }
-
-  // Lunch
+  // Page 3: Lunch + Afternoon snack
   pages.push(`
     <section class="page">
-      ${hdr(d, `${esc(d.name)}<br/><b>وعده:</b> ناهار`)}
+      ${hdr(d, `${esc(d.name)}<br/><b>وعده:</b> ناهار و میان‌وعده عصر`)}
       ${sectionTitle('ناهار','Lunch')}
       ${optionsHTML(d.lunch)}
-      ${footer(d)}
-    </section>`);
-
-  // Afternoon + Dinner
-  pages.push(`
-    <section class="page">
-      ${hdr(d, `${esc(d.name)}<br/><b>وعده:</b> عصرانه و شام`)}
-      ${sectionTitle('میان وعده','Afternoon Snack')}
+      <div style="margin-top:16px;">${sectionTitle('میان‌وعده عصر','Afternoon Snack')}</div>
       ${optionsHTML(d.afternoon)}
-      <div style="margin-top:16px;">${sectionTitle('شام','Dinner')}</div>
-      ${optionsHTML(d.dinner)}
       ${footer(d)}
     </section>`);
 
-  // Late night + supplements
+  // Page 4: Dinner + Late night
   pages.push(`
     <section class="page">
-      ${hdr(d, `${esc(d.name)}<br/><b>وعده:</b> آخر شب و مکمل‌ها`)}
-      ${sectionTitle('وعده آخر شب','Late Night')}
+      ${hdr(d, `${esc(d.name)}<br/><b>وعده:</b> شام و وعده آخر شب`)}
+      ${sectionTitle('شام','Dinner')}
+      ${optionsHTML(d.dinner)}
+      <div style="margin-top:16px;">${sectionTitle('وعده آخر شب','Late Night')}</div>
       ${optionsHTML(d.latenight)}
-      <div style="margin-top:18px;">${sectionTitle('مکمل های مورد نیاز','Supplements')}</div>
+      ${footer(d)}
+    </section>`);
+
+  // Page 5: Supplements
+  pages.push(`
+    <section class="page">
+      ${hdr(d, `${esc(d.name)}<br/><b>بخش:</b> مکمل‌ها`)}
+      ${sectionTitle('مکمل‌های مورد نیاز','Supplements')}
       <div class="supplements">
         ${d.supplements.length?d.supplements.map(s=>`<div class="supp"><div class="dot"></div>${esc(s)}</div>`).join(''):'<p style="color:var(--muted);font-size:12px;">مکملی ثبت نشده است.</p>'}
       </div>
       ${footer(d)}
     </section>`);
 
-  // Notes - split ~15 per page
+  // Notes
   if(d.notes.length){
     const per = 15;
     for(let i=0;i<d.notes.length;i+=per){
@@ -748,29 +816,336 @@ function renderPreview(){
 }
 
 /* ============================================================
-   PDF: use browser print (@media print already scoped)
+   Preview modal
 ============================================================ */
-function downloadPDF(){
-  if(!document.getElementById('previewArea').innerHTML) renderPreview();
-  setTimeout(()=>window.print(), 150);
+function openPreviewModal(){
+  renderPreview('modalPreviewArea');
+  document.getElementById('previewModal').classList.add('open');
+}
+function closePreviewModal(){
+  document.getElementById('previewModal').classList.remove('open');
 }
 
 /* ============================================================
-   Seed defaults
+   PDF
 ============================================================ */
-function seed(){
-  // Two default snack sections
-  addSnackSection('میان‌وعده صبح');
-  addSnackSection('میان‌وعده عصر');
-  // Start each meal with one empty option block
-  ['breakfast_options','lunch_options','afternoon_options','dinner_options','latenight_options']
-    .forEach(id=>addOption(id));
-  // one supplement + one note as starting placeholders
-  addSupplement('');
-  addNote();
-  renderProgress();
+function downloadPDF(){
+  const target = document.getElementById('previewArea');
+  renderPreview('previewArea');
+  const d = collectData();
+  const filename = `رژیم غذایی ${d.name} تاریخ ${d.date}.pdf`.replace(/[\\/:*?"<>|]/g,'-');
+  setTimeout(()=>{
+    const opt = {
+      margin:0,
+      filename,
+      image:{type:'jpeg',quality:.98},
+      html2canvas:{scale:2, useCORS:true, letterRendering:true, backgroundColor:'#ffffff'},
+      jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
+      pagebreak:{mode:['css','legacy'], before:'.page'}
+    };
+    html2pdf().from(target).set(opt).save().catch(err=>{
+      console.error(err);
+      alert('خطا در ساخت PDF. لطفاً دوباره تلاش کنید یا از دکمه چاپ استفاده کنید.');
+    });
+  }, 200);
 }
-seed();
+
+function downloadHTML(){
+  renderPreview('previewArea');
+  const d = collectData();
+  const filename = `رژیم غذایی ${d.name} تاریخ ${d.date}.html`.replace(/[\\/:*?"<>|]/g,'-');
+  const style = document.querySelector('style').textContent;
+  const pages = document.getElementById('previewArea').innerHTML;
+  const root = getComputedStyle(document.documentElement);
+  const cssVars = ['--bg','--page','--ink','--muted','--line','--soft','--accent','--accent-2','--accent-soft','--gold','--blue-soft']
+    .map(k=>`  ${k}:${root.getPropertyValue(k).trim()};`).join('\n');
+  const html = `<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>برنامه غذایی ${esc(d.name)}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+:root{
+${cssVars}
+}
+${style}
+.wizard, .modal-backdrop, #previewArea { display:none !important; }
+body { background:#fff; }
+</style>
+</head>
+<body>
+<div id="printPages">
+${pages}
+</div>
+<script>
+  window.addEventListener('load', function(){
+    if(window.location.hash === '#print') window.print();
+  });
+<\/script>
+</body>
+</html>`;
+  const blob = new Blob([html], {type:'text/html;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/* ============================================================
+   Platform settings (persistent, no expiry)
+============================================================ */
+function savePlatform(){
+  const data = {
+    clinician:v('p_clinician'), lic:v('p_lic'),
+    brand:v('p_brand'), addr:v('p_addr'),
+    phone:v('p_phone'), instagram:v('p_instagram')
+  };
+  localStorage.setItem(LS_PLATFORM, JSON.stringify(data));
+  updateLogoLetter();
+}
+function loadPlatform(){
+  let d;
+  try{
+    const raw = localStorage.getItem(LS_PLATFORM);
+    d = raw ? JSON.parse(raw) : null;
+  }catch(e){ d = null; }
+  if(!d){
+    // First run: seed defaults and persist them
+    d = { ...DEFAULT_PLATFORM };
+    localStorage.setItem(LS_PLATFORM, JSON.stringify(d));
+  }
+  const set = (id,val)=>{ const el=document.getElementById(id); if(el && val!=null) el.value = val; };
+  set('p_clinician', d.clinician);
+  set('p_lic', d.lic);
+  set('p_brand', d.brand);
+  set('p_addr', d.addr);
+  set('p_phone', d.phone);
+  set('p_instagram', d.instagram);
+}
+
+/* Logo */
+function updateLogoLetter(){
+  const brand = v('p_brand')||'A';
+  const el = document.getElementById('logoLetter');
+  if(el) el.textContent = brand.trim().charAt(0)||'A';
+}
+function applyLogoPreview(){
+  const preview = document.getElementById('logoPreview');
+  const data = localStorage.getItem(LS_LOGO);
+  if(data){
+    preview.innerHTML = `<img src="${data}" alt="لوگو"/>`;
+  } else {
+    preview.innerHTML = `<span id="logoLetter">${(v('p_brand')||'A').trim().charAt(0)||'A'}</span>`;
+  }
+}
+function clearLogo(){
+  localStorage.removeItem(LS_LOGO);
+  document.getElementById('p_logo_file').value='';
+  applyLogoPreview();
+}
+document.addEventListener('change', function(e){
+  if(e.target && e.target.id==='p_logo_file'){
+    const f = e.target.files && e.target.files[0];
+    if(!f) return;
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      localStorage.setItem(LS_LOGO, reader.result);
+      applyLogoPreview();
+    };
+    reader.readAsDataURL(f);
+  }
+});
+
+/* Colors */
+function applyColors(c){
+  const root = document.documentElement.style;
+  root.setProperty('--accent', c.accent);
+  root.setProperty('--accent-2', c.accent2);
+  root.setProperty('--gold', c.gold);
+  root.setProperty('--ink', c.ink);
+  root.setProperty('--bg', c.bg);
+  root.setProperty('--accent-soft', hexToSoft(c.accent));
+}
+function hexToSoft(hex){
+  const h = hex.replace('#','');
+  const r = parseInt(h.substr(0,2),16), g=parseInt(h.substr(2,2),16), b=parseInt(h.substr(4,2),16);
+  const mix = (v)=>Math.round(v + (255-v)*0.82);
+  return `rgb(${mix(r)},${mix(g)},${mix(b)})`;
+}
+function readColorInputs(){
+  return {
+    accent: v('c_accent'),
+    accent2: v('c_accent2'),
+    gold: v('c_gold'),
+    ink: v('c_ink'),
+    bg: v('c_bg')
+  };
+}
+function saveColors(){
+  const c = readColorInputs();
+  localStorage.setItem(LS_COLORS, JSON.stringify(c));
+  applyColors(c);
+}
+function loadColors(){
+  try{
+    const raw = localStorage.getItem(LS_COLORS);
+    const c = raw?JSON.parse(raw):DEFAULT_COLORS;
+    document.getElementById('c_accent').value  = c.accent;
+    document.getElementById('c_accent2').value = c.accent2;
+    document.getElementById('c_gold').value    = c.gold;
+    document.getElementById('c_ink').value     = c.ink;
+    document.getElementById('c_bg').value      = c.bg;
+    applyColors(c);
+  }catch(e){ applyColors(DEFAULT_COLORS); }
+}
+function resetColors(){
+  Object.entries(DEFAULT_COLORS).forEach(([k,val])=>{
+    const map = {accent:'c_accent',accent2:'c_accent2',gold:'c_gold',ink:'c_ink',bg:'c_bg'};
+    document.getElementById(map[k]).value = val;
+  });
+  saveColors();
+}
+
+/* ============================================================
+   Autosave form data (24h expiry)
+============================================================ */
+let saveTimer=null;
+function scheduleSave(){
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveForm, 300);
+}
+function serializeForm(){
+  return {
+    ts: Date.now(),
+    client: {
+      name:v('f_name'), date:v('f_date'), age:v('f_age'),
+      height:v('f_height'), weight:v('f_weight'), goal:v('f_goal'),
+      disease:v('f_disease'), other:v('f_other'), fasting:v('f_fasting')
+    },
+    breakfast: collectOptions('breakfast_options'),
+    morning:   collectOptions('morning_options'),
+    lunch:     collectOptions('lunch_options'),
+    afternoon: collectOptions('afternoon_options'),
+    dinner:    collectOptions('dinner_options'),
+    latenight: collectOptions('latenight_options'),
+    supplements: collectSupplements(),
+    notes: collectNotes()
+  };
+}
+function saveForm(){
+  try{
+    localStorage.setItem(LS_FORM, JSON.stringify(serializeForm()));
+  }catch(e){ console.warn('autosave failed', e); }
+}
+function loadForm(){
+  try{
+    const raw = localStorage.getItem(LS_FORM);
+    if(!raw) return false;
+    const data = JSON.parse(raw);
+    if(!data.ts || (Date.now()-data.ts) > 24*3600*1000){
+      localStorage.removeItem(LS_FORM);
+      return false;
+    }
+    const c = data.client||{};
+    ['name','date','age','height','weight','disease','other','fasting'].forEach(k=>{
+      const el = document.getElementById('f_'+k); if(el && c[k]!=null) el.value = c[k];
+    });
+    if(c.goal){ const g = document.getElementById('f_goal'); if(g) g.value = c.goal; }
+    (data.breakfast||[]).forEach(o=>addOption('breakfast_options', o));
+    (data.morning||[]).forEach(o=>addOption('morning_options', o));
+    (data.lunch||[]).forEach(o=>addOption('lunch_options', o));
+    (data.afternoon||[]).forEach(o=>addOption('afternoon_options', o));
+    (data.dinner||[]).forEach(o=>addOption('dinner_options', o));
+    (data.latenight||[]).forEach(o=>addOption('latenight_options', o));
+    (data.supplements||[]).forEach(s=>addSupplement(s));
+    (data.notes||[]).forEach(n=>addNote(n));
+    return true;
+  }catch(e){ return false; }
+}
+function resetForm(){
+  if(!confirm('آیا از ریست کردن فرم مطمئنید؟\nتمام داده‌های وارد شده حذف خواهد شد.\n(تنظیمات پلتفرم، لوگو و رنگ‌ها حذف نمی‌شود.)')) return;
+  localStorage.removeItem(LS_FORM);
+  location.reload();
+}
+
+/* ============================================================
+   Init
+============================================================ */
+function bindPlatformInputs(){
+  ['p_clinician','p_lic','p_brand','p_addr','p_phone','p_instagram'].forEach(id=>{
+    document.getElementById(id).addEventListener('input', ()=>{ savePlatform(); applyLogoPreview(); });
+  });
+  ['c_accent','c_accent2','c_gold','c_ink','c_bg'].forEach(id=>{
+    document.getElementById(id).addEventListener('input', saveColors);
+  });
+}
+function bindClientInputs(){
+  ['f_name','f_date','f_age','f_height','f_weight','f_goal','f_disease','f_other','f_fasting']
+    .forEach(id=>{
+      const el = document.getElementById(id);
+      if(el) el.addEventListener('input', scheduleSave);
+    });
+}
+function initDatePicker(){
+  const el = $('#f_date');
+  if(!el.persianDatepicker){
+    if(!el.val()) el.val(todayJalali());
+    return;
+  }
+  el.persianDatepicker({
+    format:'YYYY/MM/DD',
+    autoClose:true,
+    initialValue:false,
+    observer:true,
+    persianDigit:true,
+    toolbox:{ calendarSwitch:{enabled:false} }
+  });
+  if(!el.val()) el.val(todayJalali());
+}
+function seedDefaults(){
+  ['breakfast_options','morning_options','lunch_options','afternoon_options','dinner_options','latenight_options']
+    .forEach(id=>{
+      if(document.getElementById(id).children.length===0) addOption(id);
+    });
+  if(document.getElementById('supplements_container').children.length===0) addSupplement('');
+  if(document.getElementById('notes_container').children.length===0) addNote();
+}
+const loadStartAt = Date.now();
+let loadFinished = false;
+
+function maybeHideLoading(){
+  if(!loadFinished) return;
+  const elapsed = Date.now() - loadStartAt;
+  const remain = Math.max(0, 3000 - elapsed);
+  setTimeout(()=>{
+    const loader = document.getElementById('loadingScreen');
+    if(loader) loader.classList.add('hidden');
+  }, remain);
+}
+
+function init(){
+  loadColors();
+  loadPlatform();
+  applyLogoPreview();
+  bindPlatformInputs();
+  bindClientInputs();
+  loadForm();
+  seedDefaults();
+  initDatePicker();
+  renderProgress();
+  setInterval(saveForm, 5000);
+  loadFinished = true;
+  maybeHideLoading();
+}
+window.addEventListener('load', init);
 </script>
 </body>
 </html>
