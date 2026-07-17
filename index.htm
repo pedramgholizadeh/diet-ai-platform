@@ -850,9 +850,6 @@ function renderPreview(targetId){
       <div class="supplements">
         ${d.supplements.length ? d.supplements.map(s => `
           <div class="supp">
-            <div class="pill-ico">
-              <img src="${getMealImg('supplement')}" alt="مکمل" style="width:32px;height:32px;object-fit:contain;"/>
-            </div>
             ${esc(s)}
           </div>`).join('') : 
           '<p style="color:var(--muted);font-size:12px;">مکملی ثبت نشده است.</p>'}
