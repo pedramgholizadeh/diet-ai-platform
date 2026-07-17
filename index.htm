@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Diet Tisa Platform | WEBIRO</title>
+<title>ویزارد برنامه غذایی</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -121,6 +121,15 @@
   .logo-row{display:flex;gap:14px;align-items:center;flex-wrap:wrap;}
   .logo-preview{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:22px;overflow:hidden;border:1px solid var(--line);}
   .logo-preview img{width:100%;height:100%;object-fit:cover;}
+  .meal-imgs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;}
+  .meal-img-item{display:flex;gap:10px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px;}
+  .meal-img-thumb{width:52px;height:52px;border-radius:10px;background:var(--soft);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;border:1px solid var(--line);}
+  .meal-img-thumb img{width:100%;height:100%;object-fit:contain;}
+  .meal-img-item .col{display:flex;flex-direction:column;gap:4px;flex:1;min-width:0;}
+  .meal-img-item .col .nm{font-size:12px;font-weight:600;color:var(--ink);}
+  .meal-img-item .col input[type=file]{font-size:11px;}
+  .meal-img-item .col .row{display:flex;gap:6px;align-items:center;}
+  .meal-img-item .col .row button{padding:3px 8px;font-size:10.5px;}
 
   /* Option editor */
   .option-block{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px;}
@@ -191,9 +200,16 @@
   .clinician .role{color:var(--muted);font-size:11.5px;margin-top:2px;}
   .clinician .lic{margin-top:6px;font-size:11px;color:var(--gold);letter-spacing:1px;}
 
-  .section-title{display:flex;align-items:center;gap:10px;margin:6px 0 12px;padding:8px 12px;background:var(--accent-soft);border-right:4px solid var(--accent);border-radius:8px;}
+  .section-title{display:flex;align-items:center;gap:12px;margin:6px 0 12px;padding:10px 14px;background:var(--accent-soft);border-right:4px solid var(--accent);border-radius:10px;}
+  .section-title .ico{flex:0 0 52px;height:52px;display:flex;align-items:center;justify-content:center;background:#fff;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,.05);}
+  .section-title .ico svg{width:40px;height:40px;display:block;}
+  .section-title .ico img{width:46px;height:46px;object-fit:contain;display:block;border-radius:8px;}
+  .section-title .txt{display:flex;flex-direction:column;}
   .section-title .fa{font-size:16px;font-weight:700;}
   .section-title .en{font-size:11px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;}
+  .supp{position:relative;}
+  .supp .pill-ico{flex:0 0 40px;height:40px;display:flex;align-items:center;justify-content:center;background:#fff;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,.05);}
+  .supp .pill-ico svg{width:30px;height:30px;}
 
   .options{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px;}
   .options li{display:flex;align-items:flex-start;gap:10px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:12.5px;line-height:1.9;}
@@ -295,6 +311,12 @@
               </div>
             </div>
           </div>
+        </div>
+
+        <div class="panel">
+          <h3><span class="material-symbols-outlined">restaurant</span> تصاویر وعده‌ها (اختیاری)</h3>
+          <p style="font-size:11.5px;color:var(--muted);margin:0 0 10px;">در صورت آپلود، از تصویر شما استفاده می‌شود؛ در غیر این صورت تصویر پیش‌فرض نمایش داده می‌شود.</p>
+          <div class="meal-imgs-grid" id="mealImgsGrid"></div>
         </div>
 
         <div class="panel">
@@ -709,8 +731,37 @@ function optionsHTML(opts){
       <div class="items">${o.items.map(it=>`<span class="chip">${esc(it)}</span>`).join('')}</div>
     </li>`).join('')}</ul>`;
 }
-function sectionTitle(fa,en){
-  return `<div class="section-title"><span class="fa">${esc(fa)}</span><span class="en">${esc(en)}</span></div>`;
+const MEAL_IMAGE_DEFAULTS = {
+    "breakfast": "images/chai.png",
+    "morning": "images/mive.png",
+    "lunch": "images/berenj.png",
+    "afternoon": "images/mast.png",
+    "dinner": "images/soop.png",
+    "latenight": "images/shir.png"
+};
+const LS_MEAL_IMG_PREFIX = 'dw_meal_img_v1_';
+const MEAL_KEYS = ['breakfast','morning','lunch','afternoon','dinner','latenight'];
+const MEAL_LABELS = {
+  breakfast:'صبحانه', morning:'میان‌وعده صبح', lunch:'ناهار',
+  afternoon:'میان‌وعده عصر', dinner:'شام', latenight:'وعده آخر شب'
+};
+function getMealImg(key){
+  try { return localStorage.getItem(LS_MEAL_IMG_PREFIX+key) || MEAL_IMAGE_DEFAULTS[key] || ''; }
+  catch(e){ return MEAL_IMAGE_DEFAULTS[key] || ''; }
+}
+const MEAL_ICONS = {
+  supplement: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect x="10" y="24" width="44" height="16" rx="8" fill="#ef5350" transform="rotate(-20 32 32)"/><rect x="10" y="24" width="22" height="16" rx="8" fill="#fff8e1" transform="rotate(-20 32 32)"/><circle cx="32" cy="32" r="1.5" fill="#c62828" transform="rotate(-20 32 32)"/></svg>`,
+  supplementDot: `<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="12" width="24" height="8" rx="4" fill="#66bb6a" transform="rotate(-25 16 16)"/><rect x="4" y="12" width="12" height="8" rx="4" fill="#fff" transform="rotate(-25 16 16)"/></svg>`,
+};
+function sectionTitle(fa,en,key){
+  let ico = '';
+  if(key && MEAL_KEYS.includes(key)){
+    const src = getMealImg(key);
+    if(src) ico = `<div class="ico"><img src="${src}" alt="${esc(fa)}" crossorigin="anonymous"/></div>`;
+  } else if(key && MEAL_ICONS[key]){
+    ico = `<div class="ico">${MEAL_ICONS[key]}</div>`;
+  }
+  return `<div class="section-title">${ico}<div class="txt"><span class="fa">${esc(fa)}</span><span class="en">${esc(en)}</span></div></div>`;
 }
 function renderPreview(targetId){
   resetPages();
@@ -750,10 +801,10 @@ function renderPreview(targetId){
   pages.push(`
     <section class="page">
       ${hdr(d, `${esc(d.name)}<br/><b>وعده:</b> صبحانه و میان‌وعده صبح`)}
-      ${sectionTitle('صبحانه','Breakfast')}
+      ${sectionTitle('صبحانه','Breakfast','breakfast')}
       ${d.fasting?`<div class="fasting" style="background:#fffdf6;border:1px solid #efe5c8;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:12.5px;"><b style="color:var(--gold);">ناشتا:</b> ${esc(d.fasting)}</div>`:''}
       ${optionsHTML(d.breakfast)}
-      <div style="margin-top:16px;">${sectionTitle('میان‌وعده صبح','Morning Snack')}</div>
+      <div style="margin-top:16px;">${sectionTitle('میان‌وعده صبح','Morning Snack','morning')}</div>
       ${optionsHTML(d.morning)}
       ${footer(d)}
     </section>`);
@@ -762,9 +813,9 @@ function renderPreview(targetId){
   pages.push(`
     <section class="page">
       ${hdr(d, `${esc(d.name)}<br/><b>وعده:</b> ناهار و میان‌وعده عصر`)}
-      ${sectionTitle('ناهار','Lunch')}
+      ${sectionTitle('ناهار','Lunch','lunch')}
       ${optionsHTML(d.lunch)}
-      <div style="margin-top:16px;">${sectionTitle('میان‌وعده عصر','Afternoon Snack')}</div>
+      <div style="margin-top:16px;">${sectionTitle('میان‌وعده عصر','Afternoon Snack','afternoon')}</div>
       ${optionsHTML(d.afternoon)}
       ${footer(d)}
     </section>`);
@@ -773,9 +824,9 @@ function renderPreview(targetId){
   pages.push(`
     <section class="page">
       ${hdr(d, `${esc(d.name)}<br/><b>وعده:</b> شام و وعده آخر شب`)}
-      ${sectionTitle('شام','Dinner')}
+      ${sectionTitle('شام','Dinner','dinner')}
       ${optionsHTML(d.dinner)}
-      <div style="margin-top:16px;">${sectionTitle('وعده آخر شب','Late Night')}</div>
+      <div style="margin-top:16px;">${sectionTitle('وعده آخر شب','Late Night','latenight')}</div>
       ${optionsHTML(d.latenight)}
       ${footer(d)}
     </section>`);
@@ -784,9 +835,9 @@ function renderPreview(targetId){
   pages.push(`
     <section class="page">
       ${hdr(d, `${esc(d.name)}<br/><b>بخش:</b> مکمل‌ها`)}
-      ${sectionTitle('مکمل‌های مورد نیاز','Supplements')}
+      ${sectionTitle('مکمل‌های مورد نیاز','Supplements','supplement')}
       <div class="supplements">
-        ${d.supplements.length?d.supplements.map(s=>`<div class="supp"><div class="dot"></div>${esc(s)}</div>`).join(''):'<p style="color:var(--muted);font-size:12px;">مکملی ثبت نشده است.</p>'}
+        ${d.supplements.length?d.supplements.map(s=>`<div class="supp"><div class="pill-ico">${MEAL_ICONS.supplementDot}</div>${esc(s)}</div>`).join(''):'<p style="color:var(--muted);font-size:12px;">مکملی ثبت نشده است.</p>'}
       </div>
       ${footer(d)}
     </section>`);
@@ -829,26 +880,48 @@ function closePreviewModal(){
 /* ============================================================
    PDF
 ============================================================ */
-function downloadPDF(){
-  const target = document.getElementById('previewArea');
+async function downloadPDF(){
   renderPreview('previewArea');
+  const target = document.getElementById('previewArea');
   const d = collectData();
   const filename = `رژیم غذایی ${d.name} تاریخ ${d.date}.pdf`.replace(/[\\/:*?"<>|]/g,'-');
-  setTimeout(()=>{
-    const opt = {
-      margin:0,
-      filename,
-      image:{type:'jpeg',quality:.98},
-      html2canvas:{scale:2, useCORS:true, letterRendering:true, backgroundColor:'#ffffff'},
-      jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
-      pagebreak:{mode:['css','legacy'], before:'.page'}
-    };
-    html2pdf().from(target).set(opt).save().catch(err=>{
-      console.error(err);
-      alert('خطا در ساخت PDF. لطفاً دوباره تلاش کنید یا از دکمه چاپ استفاده کنید.');
-    });
-  }, 200);
+  // Wait for fonts (Vazirmatn) — critical for correct Persian rendering
+  try { if(document.fonts && document.fonts.ready) await document.fonts.ready; } catch(e){}
+  // Wait for all images (data URIs decode instantly but be safe)
+  const imgs = target.querySelectorAll('img');
+  await Promise.all([...imgs].map(im => im.complete ? Promise.resolve() : new Promise(r=>{im.onload=im.onerror=r;})));
+  await new Promise(r=>setTimeout(r, 150));
+
+  try {
+    const { jsPDF } = window.jspdf || {};
+    const pdf = new (jsPDF||window.jspdf.jsPDF)({unit:'mm', format:'a4', orientation:'portrait'});
+    const pageW = 210, pageH = 297;
+    const pages = target.querySelectorAll('.page');
+    for(let i=0;i<pages.length;i++){
+      const canvas = await html2canvas(pages[i], {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+        windowWidth: pages[i].scrollWidth
+      });
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      // fit to A4 preserving aspect ratio (canvas is A4-shaped already)
+      const ratio = canvas.height / canvas.width;
+      let w = pageW, h = pageW * ratio;
+      if(h > pageH){ h = pageH; w = pageH / ratio; }
+      const x = (pageW - w)/2, y = (pageH - h)/2;
+      if(i>0) pdf.addPage();
+      pdf.addImage(imgData, 'JPEG', x, y, w, h, undefined, 'FAST');
+    }
+    pdf.save(filename);
+  } catch(err){
+    console.error(err);
+    alert('خطا در ساخت PDF. لطفاً دوباره تلاش کنید یا از دکمه چاپ استفاده کنید.');
+  }
 }
+
 
 function downloadHTML(){
   renderPreview('previewArea');
@@ -1131,10 +1204,55 @@ function maybeHideLoading(){
   }, remain);
 }
 
+
+/* ============================================================
+   Meal images (per-section uploads)
+============================================================ */
+function renderMealImagesUI(){
+  const grid = document.getElementById('mealImgsGrid');
+  if(!grid) return;
+  grid.innerHTML = MEAL_KEYS.map(k=>`
+    <div class="meal-img-item" data-key="${k}">
+      <div class="meal-img-thumb"><img src="${getMealImg(k)}" alt=""/></div>
+      <div class="col">
+        <span class="nm">${MEAL_LABELS[k]}</span>
+        <input type="file" accept="image/*" class="meal-img-file" data-key="${k}"/>
+        <div class="row">
+          <button class="btn btn-ghost btn-sm" onclick="clearMealImg('${k}')"><span class="material-symbols-outlined">restart_alt</span> پیش‌فرض</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+function refreshMealThumb(k){
+  const item = document.querySelector(`.meal-img-item[data-key="${k}"] .meal-img-thumb img`);
+  if(item) item.src = getMealImg(k);
+}
+function clearMealImg(k){
+  try { localStorage.removeItem(LS_MEAL_IMG_PREFIX+k); } catch(e){}
+  const inp = document.querySelector(`.meal-img-file[data-key="${k}"]`);
+  if(inp) inp.value = '';
+  refreshMealThumb(k);
+}
+document.addEventListener('change', function(e){
+  const t = e.target;
+  if(t && t.classList && t.classList.contains('meal-img-file')){
+    const k = t.dataset.key;
+    const f = t.files && t.files[0];
+    if(!f) return;
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      try { localStorage.setItem(LS_MEAL_IMG_PREFIX+k, reader.result); } catch(err){ alert('حجم تصویر بالاست.'); return; }
+      refreshMealThumb(k);
+    };
+    reader.readAsDataURL(f);
+  }
+});
+
 function init(){
   loadColors();
   loadPlatform();
   applyLogoPreview();
+  renderMealImagesUI();
   bindPlatformInputs();
   bindClientInputs();
   loadForm();
