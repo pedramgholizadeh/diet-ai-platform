@@ -732,34 +732,45 @@ function optionsHTML(opts){
     </li>`).join('')}</ul>`;
 }
 const MEAL_IMAGE_DEFAULTS = {
-    "breakfast": "images/chai.png",
-    "morning": "images/mive.png",
-    "lunch": "images/berenj.png",
-    "afternoon": "images/mast.png",
-    "dinner": "images/soop.png",
-    "latenight": "images/shir.png"
+    "breakfast": "/images/chai.png",
+    "morning": "/images/mive.png",
+    "lunch": "/images/berenj.png",
+    "afternoon": "/images/mast.png",
+    "dinner": "/images/soop.png",
+    "latenight": "/images/shir.png",
+    "supplement": "/images/mokamel.png"   // ← اضافه شد
 };
+
 const LS_MEAL_IMG_PREFIX = 'dw_meal_img_v1_';
-const MEAL_KEYS = ['breakfast','morning','lunch','afternoon','dinner','latenight'];
+const MEAL_KEYS = ['breakfast','morning','lunch','afternoon','dinner','latenight','supplement'];
+
 const MEAL_LABELS = {
-  breakfast:'صبحانه', morning:'میان‌وعده صبح', lunch:'ناهار',
-  afternoon:'میان‌وعده عصر', dinner:'شام', latenight:'وعده آخر شب'
+  breakfast: 'صبحانه',
+  morning: 'میان‌وعده صبح',
+  lunch: 'ناهار',
+  afternoon: 'میان‌وعده عصر',
+  dinner: 'شام',
+  latenight: 'وعده آخر شب',
+  supplement: 'مکمل‌ها'
 };
 function getMealImg(key){
-  try { return localStorage.getItem(LS_MEAL_IMG_PREFIX+key) || MEAL_IMAGE_DEFAULTS[key] || ''; }
-  catch(e){ return MEAL_IMAGE_DEFAULTS[key] || ''; }
+  try {
+    return localStorage.getItem(LS_MEAL_IMG_PREFIX + key) || MEAL_IMAGE_DEFAULTS[key] || '';
+  } catch(e){
+    return MEAL_IMAGE_DEFAULTS[key] || '';
+  }
 }
 const MEAL_ICONS = {
   supplement: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><rect x="10" y="24" width="44" height="16" rx="8" fill="#ef5350" transform="rotate(-20 32 32)"/><rect x="10" y="24" width="22" height="16" rx="8" fill="#fff8e1" transform="rotate(-20 32 32)"/><circle cx="32" cy="32" r="1.5" fill="#c62828" transform="rotate(-20 32 32)"/></svg>`,
   supplementDot: `<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="12" width="24" height="8" rx="4" fill="#66bb6a" transform="rotate(-25 16 16)"/><rect x="4" y="12" width="12" height="8" rx="4" fill="#fff" transform="rotate(-25 16 16)"/></svg>`,
 };
-function sectionTitle(fa,en,key){
+function sectionTitle(fa, en, key){
   let ico = '';
   if(key && MEAL_KEYS.includes(key)){
     const src = getMealImg(key);
-    if(src) ico = `<div class="ico"><img src="${src}" alt="${esc(fa)}" crossorigin="anonymous"/></div>`;
-  } else if(key && MEAL_ICONS[key]){
-    ico = `<div class="ico">${MEAL_ICONS[key]}</div>`;
+    if(src){
+      ico = `<div class="ico"><img src="${src}" alt="${esc(fa)}" crossorigin="anonymous"/></div>`;
+    }
   }
   return `<div class="section-title">${ico}<div class="txt"><span class="fa">${esc(fa)}</span><span class="en">${esc(en)}</span></div></div>`;
 }
@@ -839,6 +850,7 @@ function renderPreview(targetId){
       <div class="supplements">
         ${d.supplements.length?d.supplements.map(s=>`<div class="supp"><div class="pill-ico">${MEAL_ICONS.supplementDot}</div>${esc(s)}</div>`).join(''):'<p style="color:var(--muted);font-size:12px;">مکملی ثبت نشده است.</p>'}
       </div>
+      ${optionsHTML(d.latenight)}
       ${footer(d)}
     </section>`);
 
